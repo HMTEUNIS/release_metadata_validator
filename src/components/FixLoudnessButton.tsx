@@ -15,7 +15,7 @@ import { ReleaseTagNote } from './ReleaseTagNote';
 const LIMITS = [
   'Normalization adjusts level, not dynamics. If your master was heavily limited, the fix cannot restore the original punch.',
   'Output is WAV. If you need MP3 or FLAC for your distributor, convert after downloading.',
-  "The fix uses FFmpeg's loudnorm filter (EBU R128). It targets integrated loudness and true peak, not perceived punch.",
+  "The fix uses FFmpeg's loudnorm filter (EBU R128) with LRA=11. LRA is the loudness range it steers toward, not just the integrated level.",
   'First use downloads about 32 MB. Later fixes in the same session are faster.',
 ];
 
@@ -65,6 +65,10 @@ export function FixLoudnessButton({ file, ruleId, plan }: { file: File; ruleId: 
   return (
     <div className="loudness-fix" data-testid={`fix-${ruleId}`}>
       <ul>
+        <li>
+          The fix targets {chosen.lufs} LUFS with a standard dynamic range. It may not preserve the exact character of
+          your original master.
+        </li>
         {LIMITS.map((limit) => (
           <li key={limit}>{limit}</li>
         ))}

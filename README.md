@@ -215,10 +215,10 @@ Color space and DPI are not read. Browsers do not reliably expose CMYK versus sR
 | `OCR-02` | all | warning | Title not found in cover text. |
 | `OCR-03` | all | error | URL, domain, `@handle`, or a dollar price. The message names Spotify and Apple. |
 | `OCR-04` | apple | error | The words Explicit or Parental Advisory are on the art. |
-| `ART-09` | tunecore | warning | OCR words are not the same set as the artist and title words. |
-| `ART-10` | cdbaby | warning | Same exact-text check. |
+| `ART-09` | tunecore | warning | Proxy for an exact cover-text match. The word set differs from the artist and title. |
+| `ART-10` | cdbaby | warning | Same word-set proxy. |
 
-Text matching folds case, strips accents, and keeps letters and digits. TuneCore and CD Baby "exact" means the same word set, not the same punctuation or order. A missing artist or title skips `ART-09` and `ART-10` rather than failing them. OCR is best-effort. Covers whose long edge exceeds 2000 px are scaled to a PNG before recognition. The worker is created with `workerBlobURL: false` and local paths under `public/tesseract`.
+`ART-09` and `ART-10` are a proxy for the real TuneCore and CD Baby rule, not a substitute. Those platforms can reject a cover when the artist and title are in a different order, or when the punctuation differs. This check folds case, strips accents, and compares the set of words. A cover that reads "Artist – Track" passes against metadata that reads "Track – Artist". The result says so: it checks that the words match, and it does not check order or punctuation. A missing artist or title skips the check. OCR is best-effort. Covers whose long edge exceeds 2000 px are scaled to a PNG before recognition. The worker is created with `workerBlobURL: false` and local paths under `public/tesseract`.
 
 ## Corrections
 
@@ -245,7 +245,7 @@ Loudness:
 -af loudnorm=I=-14|I=-16:TP=-1.0:LRA=11 -ar 44100 -map_metadata -1
 ```
 
-Spotify is −14. Apple is −16. The output name is `{title}-normalized-{14|16}lufs.wav` when the form has a title.
+`I` is integrated loudness: −14 LUFS for Spotify, −16 for Apple. `TP=-1.0` is the true-peak ceiling in dBTP. `LRA=11` is the loudness range, in LU, that `loudnorm` steers toward. The check only measures integrated LUFS. The fix also reshapes dynamic range, so a heavily compressed master can come back with a different character than a gain change alone would produce. The output name is `{title}-normalized-{14|16}lufs.wav` when the form has a title.
 
 Conversion keeps the source bit depth when it can: `pcm_s24le`, `pcm_s32le`, otherwise `pcm_s16le`. Sample rate is left alone. An MP3 conversion cannot restore samples the MP3 discarded. The UI says so.
 
@@ -379,7 +379,7 @@ The static export does not apply `headers()` from `next.config.js`. Loudness and
 - No CMYK or DPI check.
 - No DDEX Workbench call, and the template is not a delivery file.
 - OCR misses stylized type. Text rules are warnings except promotional text, the Apple explicit-label words, and the TuneCore / CD Baby time-sensitive words.
-- A loudness fix changes level. It does not restore dynamics.
+- A loudness fix targets integrated LUFS and a loudness range of 11 LU. It changes level and can change the character of a heavily compressed master. It does not restore dynamics.
 - A fitted JPEG can upscale. It does not invent detail.
 - Explicit on the form is written into files and XML. The cover check only flags the words Explicit and Parental Advisory printed on the art.
 - CD Baby featuring-credit matching and language consistency are not implemented. Exact cover text is a warning, not a hard error.

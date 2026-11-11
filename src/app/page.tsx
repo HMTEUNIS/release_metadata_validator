@@ -458,10 +458,18 @@ export default function HomePage() {
           <li>TuneCore and CD Baby have stricter cover art size ranges than Spotify. An image that passes Spotify may fail TuneCore.</li>
           <li>Enlarging a small cover does not add detail. Look at the fitted JPEG and see if you like it.</li>
           <li>CD Baby&apos;s file name rule is checked here. The upload to CD Baby is still done by your distributor.</li>
-          <li>Text matching on cover art is best-effort. TuneCore and CD Baby require an exact match. Mismatches are warnings for you to review.</li>
+          <li>
+            Text matching on cover art is best-effort. TuneCore and CD Baby can reject a cover when the artist and title
+            are in a different order, or when the punctuation differs. This checks that the words match; it doesn&apos;t
+            check order or punctuation. Mismatches are warnings for you to review.
+          </li>
           <li>OCR is imperfect. If it can&apos;t read text, text-consistency checks are skipped.</li>
           <li>Silence detection uses a threshold of -60 dBFS. Very quiet passages may be flagged as silence.</li>
-          <li>A loudness fix changes level. It does not restore dynamics that were limited away.</li>
+          <li>
+            A loudness fix targets −14 LUFS for Spotify or −16 LUFS for Apple Music, with a loudness range of 11. It
+            changes level. It does not restore dynamics that were limited away, and it may not preserve the exact
+            character of your original master.
+          </li>
           <li>
             The explicit yes/no choice is written into corrected files and the XML. This check flags the words Explicit
             or Parental Advisory when they are printed on the cover. Apple adds that label itself.

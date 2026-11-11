@@ -156,12 +156,13 @@ function exactRule(platform: Distributor, coverText: string, metadata: ReleaseMe
   const id = platform === 'tunecore' ? 'ART-09' : 'ART-10';
   const expected = `${metadata.artist.trim()} / ${metadata.title.trim()}`;
   const found = coverText.trim().replace(/\s+/g, ' ');
+  const proxy = "This checks that the words match; it doesn't check order or punctuation.";
   if (match) {
     return {
       id,
       platform,
       severity: 'pass',
-      message: `Cover text matches the artist and title for ${label}. This check is best-effort.`,
+      message: `The words on the cover match the artist and title for ${label}. ${proxy}`,
       fix: '',
     };
   }
@@ -169,8 +170,8 @@ function exactRule(platform: Distributor, coverText: string, metadata: ReleaseMe
     id,
     platform,
     severity: 'warning',
-    message: `${label} requires cover art text to exactly match your artist name and title. OCR found '${found}' but metadata is '${expected}'.`,
-    fix: 'Use only the artist name and title on the cover, written the same way as in the form. OCR can miss stylized lettering.',
+    message: `${label} can reject cover text when the artist and title differ in order or punctuation. OCR found '${found}' and the form says '${expected}'. ${proxy}`,
+    fix: 'Compare the cover with the form yourself. OCR can miss stylized lettering, and this check only compares the words.',
   };
 }
 

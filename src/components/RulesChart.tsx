@@ -94,8 +94,10 @@ const ROWS: { topic: string; cells: Record<CoverPlatform, string> }[] = [
       spotify: 'No URL, social handle, or price.',
       apple: 'No Explicit or Parental Advisory printed on the art.',
       distrokid: 'Not checked for DistroKid.',
-      tunecore: 'Artist and title should match the cover. No “new”, “latest”, “exclusive”, or “limited edition”.',
-      cdbaby: 'Artist and title should match the cover. No “new”, “latest”, “exclusive”, or “limited edition”.',
+      tunecore:
+        "This checks that the words match; it doesn't check order or punctuation. No “new”, “latest”, “exclusive”, or “limited edition”.",
+      cdbaby:
+        "This checks that the words match; it doesn't check order or punctuation. No “new”, “latest”, “exclusive”, or “limited edition”.",
     },
   },
   {
