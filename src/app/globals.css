@@ -265,7 +265,8 @@ body {
 }
 
 .section h2,
-.limitations h2 {
+.limitations h2,
+.contact h2 {
   display: flex;
   gap: 0.55rem;
   align-items: baseline;
@@ -290,7 +291,8 @@ body {
 }
 
 .section h2::before,
-.limitations h2::before {
+.limitations h2::before,
+.contact h2::before {
   content: ">";
   color: var(--accent);
 }
@@ -681,8 +683,26 @@ input[type='radio'] {
   margin-top: 0.35rem;
 }
 
-.coffee a {
+.coffee a,
+.contact a {
   color: var(--accent);
+}
+
+.contact {
+  margin-top: 2.4rem;
+  padding-top: 0.2rem;
+}
+
+.contact p {
+  margin: 0 0 0.85rem;
+}
+
+.github-link {
+  margin: 0.2rem 0 0;
+}
+
+.github-link a {
+  display: inline-flex;
 }
 
 .limitations {

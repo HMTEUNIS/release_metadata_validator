@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { XMLParser } from 'fast-xml-parser';
 import { parseBuffer } from 'music-metadata';
 import { buildSkeletonXml } from '../src/lib/ddexSkeleton';
 import { prefersInlineXmlSave } from '../src/lib/downloadXml';
@@ -399,6 +398,30 @@ function section(xml: string, tag: string): string {
   return xml.slice(start, end + tag.length + 3);
 }
 
+function assertWellFormedXml(xml: string): void {
+  if (!xml.startsWith('<?xml')) throw new Error('The skeleton is missing an XML declaration.');
+  const body = xml.replace(/<\?xml[^?]*\?>/, '');
+  const stack: string[] = [];
+  const tags = /<(\/?)([A-Za-z_][\w:.-]*)([^>]*)>/g;
+  let match: RegExpExecArray | null;
+  let cursor = 0;
+  while ((match = tags.exec(body))) {
+    const text = body.slice(cursor, match.index);
+    if (/[<>]/.test(text) || /&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/.test(text)) {
+      throw new Error('The skeleton has unescaped text.');
+    }
+    cursor = match.index + match[0].length;
+    const [, slash, name, rest] = match;
+    if (rest.endsWith('/')) continue;
+    if (slash) {
+      if (stack.pop() !== name) throw new Error(`The skeleton closes ${name} out of order.`);
+    } else {
+      stack.push(name);
+    }
+  }
+  if (stack.length > 0 || body.slice(cursor).trim()) throw new Error('The skeleton has unclosed tags.');
+}
+
 function testDdex() {
   const now = new Date('2026-11-11T18:00:00.000Z');
   const xml = buildSkeletonXml(
@@ -424,7 +447,7 @@ function testDdex() {
     },
     now,
   );
-  new XMLParser({ ignoreAttributes: false }).parse(xml);
+  assertWellFormedXml(xml);
   assert.match(xml, /xmlns:ern="http:\/\/ddex.net\/xml\/ern\/43"/);
   assert.match(xml, /ReleaseProfileVersionId="SimpleAudioSingle"/);
   assert.match(xml, /AvsVersionId="12"/);
@@ -470,7 +493,7 @@ function testDdex() {
     },
     now,
   );
-  new XMLParser({ ignoreAttributes: false }).parse(withIsrc);
+  assertWellFormedXml(withIsrc);
   assert.match(withIsrc, /USRC17607839/);
   assert.match(withIsrc, /<SamplingRate><\/SamplingRate>/);
   assert.match(withIsrc, /<BitsPerSample><\/BitsPerSample>/);
@@ -485,7 +508,7 @@ function testDdex() {
     },
     now,
   );
-  new XMLParser({ ignoreAttributes: false }).parse(tricky);
+  assertWellFormedXml(tricky);
 
   assert.equal(prefersInlineXmlSave('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)'), true);
   assert.equal(prefersInlineXmlSave('Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X)'), true);

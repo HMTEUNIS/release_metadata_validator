@@ -52,18 +52,6 @@ export function SkeletonExport({
         <li>The file URI is the uploaded file name. There is no hash until you add one.</li>
         <li>Your distributor still generates the message that gets delivered. Workbench may reject the empty fields until you fill them.</li>
       </ul>
-      <p className="coffee">
-        <span aria-hidden="true">☕ </span>
-        This tool is free and open source. If it saved you a rejection,{' '}
-        <a
-          href="https://buymeacoffee.com/hollyteunis"
-          target="_blank"
-          rel="noreferrer"
-          data-testid="coffee-link"
-        >
-          buy me a coffee
-        </a>.
-      </p>
     </section>
   );
 }

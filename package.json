@@ -13,7 +13,6 @@
     "@ffmpeg/core": "^0.12.10",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
-    "ddex-json-codec": "^0.4.2",
     "lufs-web": "^0.1.1",
     "music-metadata-browser": "^2.5.11",
     "next": "^14.2.18",
