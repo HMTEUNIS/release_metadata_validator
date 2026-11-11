@@ -4,7 +4,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Metadata Validation Program',
   description:
-    'Check a release against Spotify, Apple Music, and DistroKid guidelines before you upload. Runs in the browser.',
+    'Check a release against Spotify, Apple Music, DistroKid, TuneCore, and CD Baby. Fix loudness, write metadata, fit cover art, and download an ERN 4.3 base file. Runs in the browser.',
 };
 
 export const viewport: Viewport = {

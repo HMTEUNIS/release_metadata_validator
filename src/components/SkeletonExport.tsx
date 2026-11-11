@@ -32,12 +32,12 @@ export function SkeletonExport({
       </button>
       {exportError ? <p className="status is-error">{exportError}</p> : null}
       <p className="skeleton-disclaimer" data-testid="ddex-disclaimer">
-        This is a structural starting point, not a delivery-ready file. Your distributor generates the real DDEX
-        message.
+        This is a base file, not a delivery-ready message. Filled elements come from the form and the files you
+        checked. Empty elements are left for you to complete.
       </p>
       {audioIncomplete ? (
         <p className="skeleton-note">
-          Audio details in this file are placeholders because the audio header could not be read.
+          Sample rate, bit depth, channel count, or duration is empty because the audio header could not be read.
         </p>
       ) : null}
       {ocrFailed ? (
@@ -46,11 +46,11 @@ export function SkeletonExport({
         </p>
       ) : null}
       <ul>
-        <li>The DPIDs in this file are placeholders. A real delivery requires registered DDEX Party IDs.</li>
-        <li>The UPC/EAN is the placeholder 0000000000000. A real release needs a valid identifier.</li>
-        <li>The DealList is a generic placeholder. Real deals depend on your distributor and territory.</li>
-        <li>The file name is a placeholder, and there is no hash. A real delivery references the actual audio file on a file server.</li>
-        <li>This file is for understanding the format, not for submission.</li>
+        <li>Title, artist, featuring, composer, ISRC, and explicit are written when the form has them. A blank stays blank.</li>
+        <li>The label, UPC, genre, deal territory, start date, commercial model, usage, and file hash are empty.</li>
+        <li>The DPIDs are placeholders. A real delivery requires registered DDEX Party IDs.</li>
+        <li>The file URI is the uploaded file name. There is no hash until you add one.</li>
+        <li>Your distributor still generates the message that gets delivered. Workbench may reject the empty fields until you fill them.</li>
       </ul>
       <p className="coffee">
         <span aria-hidden="true">☕ </span>

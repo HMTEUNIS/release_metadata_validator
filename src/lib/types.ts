@@ -1,4 +1,4 @@
-export type Platform = 'spotify' | 'apple' | 'distrokid' | 'all';
+export type Platform = 'spotify' | 'apple' | 'distrokid' | 'tunecore' | 'cdbaby' | 'all';
 
 export type Severity = 'error' | 'warning' | 'pass';
 
@@ -13,6 +13,15 @@ export interface ValidationResult {
   details?: string;
 }
 
+export interface EmbeddedTags {
+  title?: string;
+  artist?: string;
+  featuring?: string;
+  composer?: string;
+  isrc?: string;
+  explicit?: string;
+}
+
 export interface AudioInfo {
   fileName: string;
   extension: string;
@@ -24,6 +33,7 @@ export interface AudioInfo {
   duration?: number;
   wavFormatCode: number | null;
   sniffed: ContainerKind;
+  tags?: EmbeddedTags;
 }
 
 export interface ImageInfo {
@@ -31,6 +41,8 @@ export interface ImageInfo {
   extension: string;
   width: number;
   height: number;
+  bytes?: number;
+  tags?: EmbeddedTags;
 }
 
 export interface ReleaseMetadata {

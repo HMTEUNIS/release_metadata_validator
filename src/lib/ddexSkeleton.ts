@@ -1,18 +1,17 @@
-import { jsonToDdex, type DdexMessage4 } from 'ddex-json-codec';
+import { planReleaseTags } from './releaseTags';
 import type { AudioInfo, ContainerKind, ReleaseMetadata } from './types';
 
-export const ISRC_PLACEHOLDER = 'ISRC-PLACEHOLDER';
-export const UPC_PLACEHOLDER = '0000000000000';
-const TITLE_PLACEHOLDER = 'TITLE-PLACEHOLDER';
-const ARTIST_PLACEHOLDER = 'ARTIST-PLACEHOLDER';
+const SENDER_DPID = 'PADPIDA0000000001X';
+const RECIPIENT_DPID = 'PADPIDA0000000002X';
 
 export interface SkeletonSource {
   metadata: ReleaseMetadata;
   audio: AudioInfo | null;
+  imageFileName?: string | null;
 }
 
 export function isoDuration(seconds: number | undefined): string {
-  if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return 'PT0M0S';
+  if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return '';
   const total = Math.round(seconds);
   const hours = Math.floor(total / 3600);
   const minutes = Math.floor((total % 3600) / 60);
@@ -44,132 +43,243 @@ function codecFor(kind: ContainerKind | undefined): string {
   if (kind === 'flac') return 'FLAC';
   if (kind === 'mp3') return 'MP3';
   if (kind === 'wma') return 'WMA';
-  return 'UserDefined';
+  return '';
 }
 
-function technicalXml(audio: AudioInfo | null): string {
-  const sampleRate = positive(audio?.sampleRate) ? String(Math.round(audio!.sampleRate!)) : 'PLACEHOLDER';
-  const bits = positive(audio?.bitsPerSample) ? String(Math.round(audio!.bitsPerSample!)) : 'PLACEHOLDER';
-  const channels = positive(audio?.numberOfChannels) ? String(Math.round(audio!.numberOfChannels!)) : 'PLACEHOLDER';
-  const fileName = escapeXml(audio?.fileName?.trim() || 'track.wav');
+function warningType(explicit: boolean | null): string {
+  if (explicit === true) return 'Explicit';
+  if (explicit === false) return 'NotExplicit';
+  return '';
+}
+
+function createdAt(now: Date): string {
+  return now.toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
+function el(name: string, value: string, depth: number): string {
+  return `${'  '.repeat(depth)}<${name}>${value ? escapeXml(value) : ''}</${name}>`;
+}
+
+function party(reference: string, name: string): string[] {
   return [
-    '<TechnicalSoundRecordingDetails>',
-    `<AudioCodecType>${codecFor(audio?.sniffed)}</AudioCodecType>`,
-    `<SamplingRate>${sampleRate}</SamplingRate>`,
-    `<BitsPerSample>${bits}</BitsPerSample>`,
-    `<NumberOfChannels>${channels}</NumberOfChannels>`,
-    `<File><FileName>${fileName}</FileName></File>`,
-    '</TechnicalSoundRecordingDetails>',
-  ].join('');
+    '    <Party>',
+    `      <PartyReference>${reference}</PartyReference>`,
+    '      <PartyName>',
+    el('FullName', name, 4),
+    '      </PartyName>',
+    '    </Party>',
+  ];
 }
 
-/**
- * ddex-json-codec 0.4 writes ERN 4 sound recordings without technical details.
- * The skeleton still needs sample rate, bit depth, channels, and a file name.
- */
-function insertTechnicalDetails(xml: string, audio: AudioInfo | null): string {
-  const marker = '</SoundRecording>';
-  const index = xml.indexOf(marker);
-  if (index < 0) return xml;
-  return `${xml.slice(0, index)}${technicalXml(audio)}${xml.slice(index)}`;
+function displayTitle(title: string, depth: number): string[] {
+  const pad = '  '.repeat(depth);
+  return [el('DisplayTitleText', title, depth), `${pad}<DisplayTitle>`, el('TitleText', title, depth + 1), `${pad}</DisplayTitle>`];
 }
 
-function insertArtistName(xml: string, artist: string): string {
-  const name = `<PartyName><FullName>${escapeXml(artist)}</FullName></PartyName>`;
-  const needle = '<ArtistPartyReference>P1</ArtistPartyReference>';
-  return xml.split(needle).join(`${needle}${name}`);
+function artistBlocks(artist: string, depth: number): string[] {
+  const pad = '  '.repeat(depth);
+  return [
+    el('DisplayArtistName', artist, depth),
+    `${pad}<DisplayArtist>`,
+    `${pad}  <ArtistPartyReference>P1</ArtistPartyReference>`,
+    `${pad}  <DisplayArtistRole>MainArtist</DisplayArtistRole>`,
+    `${pad}</DisplayArtist>`,
+    `${pad}<DisplayArtist>`,
+    `${pad}  <ArtistPartyReference>P3</ArtistPartyReference>`,
+    `${pad}  <DisplayArtistRole>FeaturedArtist</DisplayArtistRole>`,
+    `${pad}</DisplayArtist>`,
+  ];
 }
 
-function insertSchemaVersion(xml: string): string {
-  if (xml.includes('MessageSchemaVersionId=')) return xml;
-  return xml.replace('<ern:NewReleaseMessage ', '<ern:NewReleaseMessage MessageSchemaVersionId="ern/43" ');
+function fileBlock(fileName: string, depth: number): string[] {
+  const pad = '  '.repeat(depth);
+  return [
+    `${pad}<File>`,
+    el('URI', fileName, depth + 1),
+    `${pad}  <HashSum>`,
+    el('Algorithm', '', depth + 2),
+    el('HashSumValue', '', depth + 2),
+    `${pad}  </HashSum>`,
+    `${pad}</File>`,
+  ];
 }
 
-export function buildSkeletonMessage(source: SkeletonSource, now = new Date()): DdexMessage4 {
-  const title = source.metadata.title.trim() || TITLE_PLACEHOLDER;
-  const artist = source.metadata.artist.trim() || ARTIST_PLACEHOLDER;
-  const isrc = source.metadata.isrc?.trim() || ISRC_PLACEHOLDER;
-  const displayArtist = {
-    artist: {
-      name: artist,
-      partyReference: 'P1',
-      roles: [{ role: 'MainArtist' }],
-    },
-  };
+function deliveryFile(audio: AudioInfo | null): string[] {
+  return [
+    '          <DeliveryFile>',
+    '            <Type>AudioFile</Type>',
+    el('AudioCodecType', codecFor(audio?.sniffed), 6),
+    el('NumberOfChannels', positive(audio?.numberOfChannels) ? String(Math.round(audio!.numberOfChannels!)) : '', 6),
+    el('SamplingRate', positive(audio?.sampleRate) ? String(Math.round(audio!.sampleRate!)) : '', 6),
+    el('BitsPerSample', positive(audio?.bitsPerSample) ? String(Math.round(audio!.bitsPerSample!)) : '', 6),
+    ...fileBlock(audio?.fileName?.trim() || '', 6),
+    '          </DeliveryFile>',
+  ];
+}
 
-  return {
-    ernVersion: '4.3',
-    messageHeader: {
-      messageId: `SKELETON-${now.getTime()}`,
-      messageCreatedDateTime: now.toISOString(),
-      messageSender: {
-        partyId: 'PADPIDA0000000001X',
-        partyIdIsDpid: true,
-        fullName: 'Skeleton Export',
-      },
-      messageRecipient: {
-        partyId: 'PADPIDA0000000002X',
-        partyIdIsDpid: true,
-        fullName: 'Recipient (placeholder)',
-      },
-    },
-    partyList: [
-      {
-        partyReference: 'P1',
-        partyName: [{ fullName: artist }],
-      },
-    ],
-    resourceList: [
-      {
-        resourceReference: 'A1',
-        type: 'MusicalWorkSoundRecording',
-        soundRecordingId: { isrc },
-        displayTitleText: title,
-        displayTitles: [{ titleText: title, isDefault: true }],
-        displayArtists: [displayArtist],
-        duration: isoDuration(source.audio?.duration),
-      },
-    ],
-    releaseList: [
-      {
-        releaseReference: 'R1',
-        releaseType: 'Track',
-        releaseId: { icpn: UPC_PLACEHOLDER, isrc },
-        displayTitleText: title,
-        displayTitles: [{ titleText: title, isDefault: true }],
-        displayArtists: [displayArtist],
-        resourceGroup: {
-          sequenceNumber: 1,
-          resourceGroupContentItems: [
-            {
-              sequenceNumber: 1,
-              resourceType: 'SoundRecording',
-              releaseResourceReference: { value: 'A1', releaseResourceType: 'PrimaryResource' },
-            },
-          ],
-        },
-      },
-    ],
-    dealList: [
-      {
-        dealReleaseReferences: ['R1'],
-        deals: [
-          {
-            dealTerms: {
-              commercialModelType: 'PayAsYouGoModel',
-              useTypes: ['OnDemandStream'],
-              validityPeriod: { startDate: now.toISOString().slice(0, 10) },
-              territoryCode: ['Worldwide'],
-            },
-          },
-        ],
-      },
-    ],
-  };
+function soundRecording(title: string, artist: string, isrc: string, audio: AudioInfo | null, explicit: boolean | null): string[] {
+  return [
+    '    <SoundRecording>',
+    '      <ResourceReference>A1</ResourceReference>',
+    '      <Type>MusicalWorkSoundRecording</Type>',
+    '      <SoundRecordingEdition>',
+    '        <ResourceId>',
+    el('ISRC', isrc, 5),
+    '        </ResourceId>',
+    '        <TechnicalDetails>',
+    '          <TechnicalResourceDetailsReference>T1</TechnicalResourceDetailsReference>',
+    ...deliveryFile(audio),
+    '        </TechnicalDetails>',
+    '      </SoundRecordingEdition>',
+    ...displayTitle(title, 3),
+    ...artistBlocks(artist, 3),
+    '      <Contributor>',
+    '        <ContributorPartyReference>P4</ContributorPartyReference>',
+    '        <Role>Composer</Role>',
+    '      </Contributor>',
+    el('Duration', isoDuration(audio?.duration), 3),
+    el('ParentalWarningType', warningType(explicit), 3),
+    '    </SoundRecording>',
+  ];
+}
+
+function imageResource(fileName: string): string[] {
+  return [
+    '    <Image>',
+    '      <ResourceReference>A2</ResourceReference>',
+    '      <Type>FrontCoverImage</Type>',
+    '      <ResourceId>',
+    `        <ProprietaryId Namespace="${SENDER_DPID}">cover-001</ProprietaryId>`,
+    '      </ResourceId>',
+    '      <TechnicalDetails>',
+    '        <TechnicalResourceDetailsReference>T2</TechnicalResourceDetailsReference>',
+    ...fileBlock(fileName, 4),
+    '      </TechnicalDetails>',
+    '    </Image>',
+  ];
+}
+
+function releaseId(depth: number): string[] {
+  const pad = '  '.repeat(depth);
+  return [`${pad}<ReleaseId>`, el('GRid', '', depth + 1), el('ICPN', '', depth + 1), `${pad}</ReleaseId>`];
+}
+
+function genre(depth: number): string[] {
+  const pad = '  '.repeat(depth);
+  return [`${pad}<Genre>`, el('GenreText', '', depth + 1), `${pad}</Genre>`];
+}
+
+function resourceGroup(): string[] {
+  return [
+    '      <ResourceGroup>',
+    '        <ResourceGroupContentItem>',
+    '          <SequenceNumber>1</SequenceNumber>',
+    '          <ReleaseResourceReference>A1</ReleaseResourceReference>',
+    '        </ResourceGroupContentItem>',
+    '        <LinkedReleaseResourceReference LinkDescription="CoverArt">A2</LinkedReleaseResourceReference>',
+    '      </ResourceGroup>',
+  ];
+}
+
+function release(title: string, artist: string, explicit: boolean | null): string[] {
+  return [
+    '    <Release>',
+    '      <ReleaseReference>R0</ReleaseReference>',
+    '      <ReleaseType>Single</ReleaseType>',
+    ...releaseId(3),
+    ...displayTitle(title, 3),
+    ...artistBlocks(artist, 3),
+    '      <ReleaseLabelReference>P2</ReleaseLabelReference>',
+    ...genre(3),
+    el('ParentalWarningType', warningType(explicit), 3),
+    ...resourceGroup(),
+    '    </Release>',
+  ];
+}
+
+function trackRelease(title: string): string[] {
+  return [
+    '    <TrackRelease>',
+    '      <ReleaseReference>R1</ReleaseReference>',
+    ...releaseId(3),
+    ...displayTitle(title, 3),
+    '      <ReleaseResourceReference>A1</ReleaseResourceReference>',
+    '      <ReleaseLabelReference>P2</ReleaseLabelReference>',
+    ...genre(3),
+    '    </TrackRelease>',
+  ];
+}
+
+function dealList(): string[] {
+  return [
+    '  <DealList>',
+    '    <ReleaseDeal>',
+    '      <DealReleaseReference>R0</DealReleaseReference>',
+    '      <DealReleaseReference>R1</DealReleaseReference>',
+    '      <Deal>',
+    '        <DealTerms>',
+    el('TerritoryCode', '', 5),
+    '          <ValidityPeriod>',
+    el('StartDateTime', '', 6),
+    '          </ValidityPeriod>',
+    el('CommercialModelType', '', 5),
+    el('UseType', '', 5),
+    '        </DealTerms>',
+    '      </Deal>',
+    '    </ReleaseDeal>',
+    '  </DealList>',
+  ];
 }
 
 export function buildSkeletonXml(source: SkeletonSource, now = new Date()): string {
-  const artist = source.metadata.artist.trim() || ARTIST_PLACEHOLDER;
-  const xml = jsonToDdex(buildSkeletonMessage(source, now));
-  return insertSchemaVersion(insertArtistName(insertTechnicalDetails(xml, source.audio), artist));
+  const tags = planReleaseTags(source.metadata).tags;
+  const title = tags.title ?? '';
+  const artist = tags.artist ?? '';
+  const featuring = tags.featuring ?? '';
+  const composer = tags.composer ?? '';
+  const isrc = tags.isrc ?? '';
+  const imageName = source.imageFileName?.trim() ?? '';
+  const lines = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<ern:NewReleaseMessage',
+    '    xmlns:ern="http://ddex.net/xml/ern/43"',
+    '    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+    '    xsi:schemaLocation="http://ddex.net/xml/ern/43 http://ddex.net/xml/ern/43/release-notification.xsd"',
+    '    LanguageAndScriptCode="en"',
+    '    ReleaseProfileVersionId="SimpleAudioSingle"',
+    '    AvsVersionId="12">',
+    '  <MessageHeader>',
+    `    <MessageId>SKELETON-${now.getTime()}</MessageId>`,
+    '    <MessageSender>',
+    `      <PartyId>${SENDER_DPID}</PartyId>`,
+    '      <PartyName>',
+    '        <FullName>Skeleton Export</FullName>',
+    '      </PartyName>',
+    '    </MessageSender>',
+    '    <MessageRecipient>',
+    `      <PartyId>${RECIPIENT_DPID}</PartyId>`,
+    '      <PartyName>',
+    '        <FullName>Recipient (placeholder)</FullName>',
+    '      </PartyName>',
+    '    </MessageRecipient>',
+    `    <MessageCreatedDateTime>${createdAt(now)}</MessageCreatedDateTime>`,
+    '  </MessageHeader>',
+    '  <PartyList>',
+    ...party('P1', artist),
+    ...party('P2', ''),
+    ...party('P3', featuring),
+    ...party('P4', composer),
+    '  </PartyList>',
+    '  <ResourceList>',
+    ...soundRecording(title, artist, isrc, source.audio, source.metadata.explicit),
+    ...imageResource(imageName),
+    '  </ResourceList>',
+    '  <ReleaseList>',
+    ...release(title, artist, source.metadata.explicit),
+    ...trackRelease(title),
+    '  </ReleaseList>',
+    ...dealList(),
+    '</ern:NewReleaseMessage>',
+  ];
+  return lines.join('\n');
 }

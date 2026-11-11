@@ -1,3 +1,4 @@
+import { distributorTextRules } from './distributorRules';
 import { containsNormalized, findPromotionalText, normalizeForMatch } from '../text';
 import type { ReleaseMetadata, ValidationResult } from '../types';
 
@@ -79,5 +80,6 @@ export function ocrRules(coverText: string, metadata: ReleaseMetadata): Validati
     });
   }
 
+  results.push(...distributorTextRules(coverText, metadata));
   return results;
 }

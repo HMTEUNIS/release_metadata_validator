@@ -1,3 +1,4 @@
+import { distributorAudioRules } from './distributorRules';
 import { formatCode } from '../format';
 import type { AudioInfo, ContainerKind, ValidationResult } from '../types';
 
@@ -277,5 +278,6 @@ export function audioRules(audio: AudioInfo): ValidationResult[] {
     ruleAudio04(audio),
     ruleAudio05(audio),
     ruleAudio06(audio),
+    ...distributorAudioRules(audio),
   ];
 }

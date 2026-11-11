@@ -55,7 +55,7 @@ export function MetadataForm({ value, onChange }: MetadataFormProps) {
             id="release-isrc"
             value={value.isrc ?? ''}
             autoComplete="off"
-            placeholder="Optional. Blank becomes a placeholder in the XML."
+            placeholder="Optional. A blank ISRC stays empty in the XML."
             onChange={(event) => set('isrc', event.target.value)}
           />
         </div>

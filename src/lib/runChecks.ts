@@ -1,5 +1,6 @@
 import { extensionOf } from './format';
 import { artRules } from './rules/artRules';
+import { coverFileSizeRules } from './rules/distributorRules';
 import { audioRules } from './rules/audioRules';
 import { dkAudioRule, dkCoverRule } from './rules/dkRules';
 import type { AudioInfo, ImageInfo, ReleaseMetadata, ValidationResult } from './types';
@@ -13,6 +14,7 @@ export interface StaticCheckInput {
   image: ImageInfo | null;
   imageError: string | null;
   imageFileName: string | null;
+  imageBytes?: number | null;
   metadata: ReleaseMetadata;
 }
 
@@ -62,6 +64,11 @@ export function runStaticChecks(input: StaticCheckInput): ValidationResult[] {
     if (input.imageFileName) results.push(dkCoverRule(extensionOf(input.imageFileName)));
   } else {
     results.push(...artRules(input.image), dkCoverRule(input.image.extension));
+  }
+
+  const imageBytes = input.image?.bytes ?? input.imageBytes;
+  if (input.hasImageFile && imageBytes != null) {
+    results.push(...coverFileSizeRules(imageBytes));
   }
 
   results.push(...validateMetadata(input.metadata));

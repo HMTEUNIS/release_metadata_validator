@@ -1,14 +1,11 @@
 'use client';
 
 import type { Ref } from 'react';
+import { FixLoudnessButton } from './FixLoudnessButton';
+import { loudnessTarget } from '../lib/fixLoudness';
+import type { TagPlan } from '../lib/releaseTags';
+import { PLATFORM_LABEL } from '../lib/rules/platformSpecs';
 import type { ValidationResult } from '../lib/types';
-
-const PLATFORM_LABEL = {
-  spotify: 'Spotify',
-  apple: 'Apple',
-  distrokid: 'DistroKid',
-  all: 'All',
-} as const;
 
 const SEVERITY_MARK = {
   error: '×',
@@ -22,7 +19,15 @@ const SEVERITY_LABEL = {
   pass: 'Pass',
 } as const;
 
-function ResultItem({ result }: { result: ValidationResult }) {
+function ResultItem({
+  result,
+  audioFile,
+  plan,
+}: {
+  result: ValidationResult;
+  audioFile?: File | null;
+  plan: TagPlan;
+}) {
   return (
     <li
       className={`result is-${result.severity}`}
@@ -44,6 +49,9 @@ function ResultItem({ result }: { result: ValidationResult }) {
           <span className="fix-label">Fix:</span> {result.fix}
         </p>
       ) : null}
+      {audioFile && loudnessTarget(result.id) && (result.severity === 'error' || result.severity === 'warning') ? (
+        <FixLoudnessButton file={audioFile} ruleId={result.id} plan={plan} />
+      ) : null}
     </li>
   );
 }
@@ -52,10 +60,14 @@ export function ResultsList({
   results,
   ocrText,
   headingRef,
+  audioFile,
+  plan,
 }: {
   results: ValidationResult[];
   ocrText: string | null;
   headingRef?: Ref<HTMLHeadingElement>;
+  audioFile?: File | null;
+  plan: TagPlan;
 }) {
   const errors = results.filter((result) => result.severity === 'error');
   const warnings = results.filter((result) => result.severity === 'warning');
@@ -71,14 +83,14 @@ export function ResultsList({
       {errors.length > 0 ? (
         <ul className="result-list">
           {errors.map((result) => (
-            <ResultItem key={`${result.id}-${result.message}`} result={result} />
+            <ResultItem key={`${result.id}-${result.message}`} result={result} audioFile={audioFile} plan={plan} />
           ))}
         </ul>
       ) : null}
       {warnings.length > 0 ? (
         <ul className="result-list">
           {warnings.map((result) => (
-            <ResultItem key={`${result.id}-${result.message}`} result={result} />
+            <ResultItem key={`${result.id}-${result.message}`} result={result} audioFile={audioFile} plan={plan} />
           ))}
         </ul>
       ) : null}
@@ -87,7 +99,7 @@ export function ResultsList({
           <summary>Passed checks ({passes.length})</summary>
           <ul className="result-list">
             {passes.map((result) => (
-              <ResultItem key={`${result.id}-${result.message}`} result={result} />
+              <ResultItem key={`${result.id}-${result.message}`} result={result} audioFile={audioFile} plan={plan} />
             ))}
           </ul>
         </details>

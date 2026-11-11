@@ -70,7 +70,13 @@ interface ParsedFormat {
   duration?: number;
 }
 
-type ParseBlob = (blob: Blob) => Promise<{ format?: ParsedFormat }>;
+interface ParsedTags {
+  title?: string;
+  artist?: string;
+  isrc?: string[];
+}
+
+type ParseBlob = (blob: Blob) => Promise<{ format?: ParsedFormat; common?: ParsedTags }>;
 
 async function loadParseBlob(): Promise<ParseBlob> {
   const imported = (await import('music-metadata-browser')) as {
@@ -87,11 +93,13 @@ export async function parseAudioFile(file: File): Promise<AudioInfo> {
   const sniffed = sniffContainer(header);
   const extension = extensionOf(file.name);
   let parsed: ParsedFormat | undefined;
+  let tags: ParsedTags | undefined;
 
   try {
     const parseBlob = await loadParseBlob();
     const metadata = await parseBlob(file);
     parsed = metadata.format;
+    tags = metadata.common;
   } catch (error) {
     if (sniffed === 'unknown') {
       throw new Error(error instanceof Error ? error.message : 'Could not read this audio file.');
@@ -112,5 +120,10 @@ export async function parseAudioFile(file: File): Promise<AudioInfo> {
     duration: parsed?.duration,
     wavFormatCode,
     sniffed,
+    tags: {
+      title: tags?.title?.trim() || undefined,
+      artist: tags?.artist?.trim() || undefined,
+      isrc: tags?.isrc?.find((value) => value.trim())?.trim(),
+    },
   };
 }

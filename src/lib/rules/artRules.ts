@@ -1,3 +1,4 @@
+import { distributorCoverRules } from './distributorRules';
 import type { ImageInfo, ValidationResult } from '../types';
 
 const PREFERRED = new Set(['jpg', 'jpeg', 'png', 'tif', 'tiff']);
@@ -48,20 +49,20 @@ export function artRules(image: ImageInfo): ValidationResult[] {
     });
   }
 
-  if (width < 3000 || height < 3000) {
+  if (width < 4000 || height < 4000) {
     results.push({
       id: 'ART-03',
       platform: 'apple',
       severity: 'error',
-      message: `Apple Music requires at least 3000x3000. Yours is ${size}.`,
-      fix: 'Export a square image at least 3000x3000 for Apple Music.',
+      message: `Apple Music requires at least 4000px. Yours is ${size}.`,
+      fix: 'Export a square image at least 4000px for Apple Music.',
     });
   } else {
     results.push({
       id: 'ART-03',
       platform: 'apple',
       severity: 'pass',
-      message: `Cover is ${size}, which meets Apple Music's 3000x3000 minimum.`,
+      message: `Cover is ${size}, which meets Apple Music's 4000px minimum.`,
       fix: '',
     });
   }
@@ -74,12 +75,20 @@ export function artRules(image: ImageInfo): ValidationResult[] {
       message: `DistroKid requires at least 1000x1000. Yours is ${size}.`,
       fix: 'Export a square image at least 1000x1000 for DistroKid.',
     });
+  } else if (width < 3000 || height < 3000) {
+    results.push({
+      id: 'ART-04',
+      platform: 'distrokid',
+      severity: 'warning',
+      message: `DistroKid requires at least 1000px, recommends 3000px. Yours is ${size}.`,
+      fix: 'Export a square image at 3000px or larger.',
+    });
   } else {
     results.push({
       id: 'ART-04',
       platform: 'distrokid',
       severity: 'pass',
-      message: `Cover is ${size}, which meets DistroKid's 1000x1000 minimum.`,
+      message: `Cover is ${size}, which meets DistroKid's 3000px recommendation.`,
       fix: '',
     });
   }
@@ -121,5 +130,5 @@ export function artRules(image: ImageInfo): ValidationResult[] {
     });
   }
 
-  return results;
+  return [...results, ...distributorCoverRules(image)];
 }

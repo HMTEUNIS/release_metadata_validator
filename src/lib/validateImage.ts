@@ -1,4 +1,5 @@
 import { extensionOf } from './format';
+import { readImageTags } from './imageTags';
 import type { ImageInfo } from './types';
 
 export function loadImage(url: string): Promise<HTMLImageElement> {
@@ -11,6 +12,7 @@ export function loadImage(url: string): Promise<HTMLImageElement> {
 }
 
 export async function parseImageFile(file: File): Promise<ImageInfo> {
+  const tags = readImageTags(new Uint8Array(await file.arrayBuffer()));
   const url = URL.createObjectURL(file);
   try {
     const img = await loadImage(url);
@@ -22,6 +24,8 @@ export async function parseImageFile(file: File): Promise<ImageInfo> {
       extension: extensionOf(file.name),
       width: img.naturalWidth,
       height: img.naturalHeight,
+      bytes: file.size,
+      tags,
     };
   } finally {
     URL.revokeObjectURL(url);

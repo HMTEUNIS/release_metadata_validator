@@ -4,8 +4,7 @@ export function prefersInlineXmlSave(userAgent: string): boolean {
   return /iPhone|iPad|iPod|Android/i.test(userAgent);
 }
 
-export function downloadXml(xml: string, filename = SKELETON_FILENAME): void {
-  const blob = new Blob([xml], { type: 'application/xml' });
+export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   if (prefersInlineXmlSave(navigator.userAgent)) {
     window.open(url, '_blank', 'noopener');
@@ -19,4 +18,8 @@ export function downloadXml(xml: string, filename = SKELETON_FILENAME): void {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+export function downloadXml(xml: string, filename = SKELETON_FILENAME): void {
+  downloadBlob(new Blob([xml], { type: 'application/xml' }), filename);
 }
