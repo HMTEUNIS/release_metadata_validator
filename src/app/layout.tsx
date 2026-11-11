@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Metadata Validator',
+  title: 'Metadata Validation Program',
   description:
     'Check a release against Spotify, Apple Music, and DistroKid guidelines before you upload. Runs in the browser.',
 };

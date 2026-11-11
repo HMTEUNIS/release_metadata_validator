@@ -28,17 +28,39 @@ interface CoverState {
   previewUrl: string | null;
 }
 
+const SPIRAL = `⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⣤⣤⣤⣤⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⡶⠿⠋⠛⠉⠁⠀⠉⠉⠛⠿⣶⣀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⣠⣾⠟⠁⠀⠀⢀⣄⣤⣤⣤⣀⠀⠀⠀⠈⠻⣧⡀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⣠⣼⠟⠀⠀⣠⣴⠟⠟⠉⠉⠈⠉⠻⣷⣄⠀⠀⠀⠹⣷⡀⠀⠀⠀⠀
+⠀⠀⠀⣠⡿⠁⠀⢀⣾⠟⠁⠀⣠⣤⡶⣤⣤⣀⠈⢻⣦⠀⠀⠀⡿⡇⠀⠀⠀⠀
+⠀⠀⢀⣿⠀⠀⢀⣾⠋⠀⠀⣾⠏⠀⣠⣄⠉⢻⣆⠈⣿⡄⠀⠀⢸⡧⠀⠀⠀⠀
+⠀⠀⣸⡏⠀⠀⢸⡏⠀⠀⣸⡇⠀⢼⡏⠻⠂⢸⡯⠀⣸⡇⠀⠀⣸⠇⠀⠀⠀⠀
+⠀⠀⢸⣇⠀⠀⢿⡇⠀⠀⠪⣷⠀⠈⠻⣷⡾⠟⠁⢠⡿⠁⠀⢰⡿⠁⠀⠀⠀⠀
+⠀⠀⠀⢿⣆⠀⠈⣿⡄⠀⠀⠻⣷⣄⣀⣀⣀⣠⣴⠿⠁⠀⣴⠿⠁⠀⠀⠀⠀⠀
+⠀⠀⠀⠈⢻⣧⠀⠘⠿⣶⣄⠀⠈⠈⠛⠛⠛⠋⠀⠀⣤⡾⠋⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠋⠀⠀⠀⠈⠹⠷⣦⣤⣤⣤⣤⡴⠾⠟⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀`;
+
 const ASCII_TITLE = `#   # ##### #####  ###  ####   ###  #####  ###
 ## ## #       #   #   # #   # #   #   #   #   #
 # # # ###     #   ##### #   # #####   #   #####
 #   # #       #   #   # #   # #   #   #   #   #
 #   # #####   #   #   # ####  #   #   #   #   #
 
-#   #  ###  #     ##### ####   ###  #####  ###  ####
-#   # #   # #       #   #   # #   #   #   #   # #   #
-#   # ##### #       #   #   # #####   #   #   # ####
- # #  #   # #       #   #   # #   #   #   #   # #  #
-  #   #   # ##### ##### ####  #   #   #    ###  #   #`;
+#   #  ###  #     ##### ####   ###  ##### #####  ###  #   #
+#   # #   # #       #   #   # #   #   #     #   #   # ##  #
+#   # ##### #       #   #   # #####   #     #   #   # # # #
+ # #  #   # #       #   #   # #   #   #     #   #   # #  ##
+  #   #   # ##### ##### ####  #   #   #   #####  ###  #   #
+
+####  ####   ###   ###  ####   ###  #   #
+#   # #   # #   # #     #   # #   # ## ##
+####  ####  #   # #  ## ####  ##### # # #
+#     #  #  #   # #   # #  #  #   # #   #
+#     #   #  ###   ###  #   # #   # #   #`;
 
 const EMPTY_METADATA: ReleaseMetadata = {
   title: '',
@@ -223,14 +245,14 @@ export default function HomePage() {
   return (
     <main className="page">
       <header className="masthead">
-        <p className="eyebrow">&gt; pre-flight check</p>
+        <pre className="spiral" aria-hidden="true">{SPIRAL}</pre>
         <h1>
-          <span className="visually-hidden">Metadata Validator</span>
+          <span className="visually-hidden">Metadata Validation Program</span>
           <pre className="ascii" aria-hidden="true">{ASCII_TITLE}</pre>
         </h1>
         <p className="lede">Check your release before you upload.</p>
         <p className="note">
-          Audio, artwork, and metadata are checked in this browser. Nothing is uploaded.
+          Validate your audio, artwork and metadata before uploading to Spotify, Apple Music, or Distrokid. All checks are done in browser. Nothing is Uploaded. No this is not AI.
         </p>
       </header>
 

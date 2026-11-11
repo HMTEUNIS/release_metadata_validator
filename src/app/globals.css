@@ -53,12 +53,15 @@ body {
   border-bottom: 1px solid var(--line);
 }
 
-.eyebrow {
-  margin: 0 0 0.85rem;
+.spiral {
+  margin: 0 0 1.1rem;
+  overflow-x: auto;
   color: var(--accent);
-  font-size: 0.78rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0;
 }
 
 .masthead h1 {
