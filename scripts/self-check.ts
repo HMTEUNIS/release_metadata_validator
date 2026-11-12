@@ -482,7 +482,31 @@ function testDdex() {
   assert.match(xml, /<HashSumValue><\/HashSumValue>/);
   assert.match(xml, /PADPIDA0000000001X/);
   assert.match(xml, /PADPIDA0000000002X/);
-  assert.match(xml, /<URI>tone\.wav<\/URI>/);
+  assert.match(xml, /<URI>Night Drive\.wav<\/URI>/);
+  assert.match(xml, /<AudioCodecType>PCM<\/AudioCodecType>/);
+
+  const fromMp3 = buildSkeletonXml(
+    {
+      metadata: { title: 'blue bearrrys', artist: 'A', featuring: '', composer: '', explicit: null },
+      audio: {
+        fileName: '3-07 Why Must I (Version).mp3',
+        extension: 'mp3',
+        sampleRate: 48000,
+        numberOfChannels: 2,
+        duration: 298,
+        wavFormatCode: null,
+        sniffed: 'unknown',
+      },
+    },
+    now,
+  );
+  assert.match(fromMp3, /<AudioCodecType>PCM<\/AudioCodecType>/);
+  assert.match(fromMp3, /<BitsPerSample>16<\/BitsPerSample>/);
+  assert.match(fromMp3, /<SamplingRate>48000<\/SamplingRate>/);
+  assert.match(fromMp3, /<NumberOfChannels>2<\/NumberOfChannels>/);
+  assert.match(fromMp3, /<URI>blue bearrrys\.wav<\/URI>/);
+  assert.match(fromMp3, /<DisplayTitleText>blue bearrrys<\/DisplayTitleText>/);
+  assert.doesNotMatch(fromMp3, /Why Must I/);
   assert.match(xml, /<URI>cover\.jpg<\/URI>/);
   assert.match(xml, /<ParentalWarningType>NotExplicit<\/ParentalWarningType>/);
 

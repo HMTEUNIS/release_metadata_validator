@@ -312,7 +312,7 @@ Root attributes are `LanguageAndScriptCode="en"`, `ReleaseProfileVersionId="Simp
 | R0 | Release type `Single`. |
 | R1 | Track release. No `ReleaseType`. `Track` is not a valid ERN 4.3 release type. |
 
-Filled values come from the form and the audio header: title, artist, featuring, composer, ISRC, explicit (`Explicit` or `NotExplicit`), codec (`PCM`, `FLAC`, `MP3`, `WMA`), channels, sample rate, bits, duration as `PT#H#M#S`, and file URIs. Duration is omitted as an empty element when the header has no duration. `isoDuration` returns `''` for unknown input rather than `PT0M0S`.
+Filled values come from the form and the audio header: title, artist, featuring, composer, ISRC, explicit (`Explicit` or `NotExplicit`), channels, sample rate, bits, and duration as `PT#H#M#S`. A WAV, MP3, or FLAC is described as the PCM WAV named from the title, the same name as the WAV download. An MP3 is 16-bit. A FLAC keeps 16, 24, or 32-bit. Sample rate and channel count stay as read. The cover URI remains the uploaded file name. WMA stays the original file. Duration is omitted as an empty element when the header has no duration. `isoDuration` returns `''` for unknown input rather than `PT0M0S`.
 
 Always present and empty when unknown: GRid, ICPN, label name, genre, deal territory, start date, commercial model, use type, hash algorithm, and hash value. Sender DPID is `PADPIDA0000000001X`. Recipient DPID is `PADPIDA0000000002X`. Both are placeholders.
 

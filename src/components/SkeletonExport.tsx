@@ -49,7 +49,10 @@ export function SkeletonExport({
         <li>Title, artist, featuring, composer, ISRC, and explicit are written when the form has them. A blank stays blank.</li>
         <li>The label, UPC, genre, deal territory, start date, commercial model, usage, and file hash are empty.</li>
         <li>The DPIDs are placeholders. A real delivery requires registered DDEX Party IDs.</li>
-        <li>The file URI is the uploaded file name. There is no hash until you add one.</li>
+        <li>
+          The audio URI is the WAV named from the title. An MP3 or FLAC is described as that PCM WAV, not the original
+          upload. The cover URI is still the uploaded file name. There is no hash until you add one.
+        </li>
         <li>Your distributor still generates the message that gets delivered. Workbench may reject the empty fields until you fill them.</li>
       </ul>
     </section>

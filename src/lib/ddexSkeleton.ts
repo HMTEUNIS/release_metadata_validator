@@ -1,4 +1,5 @@
-import { planReleaseTags } from './releaseTags';
+import { planReleaseTags, releaseWavFilename } from './releaseTags';
+import { actualKind } from './rules/audioRules';
 import type { AudioInfo, ContainerKind, ReleaseMetadata } from './types';
 
 const SENDER_DPID = 'PADPIDA0000000001X';
@@ -104,15 +105,40 @@ function fileBlock(fileName: string, depth: number): string[] {
   ];
 }
 
-function deliveryFile(audio: AudioInfo | null): string[] {
+function deliveryKind(audio: AudioInfo): ContainerKind {
+  const kind = actualKind(audio);
+  if (kind !== 'unknown') return kind;
+  if (audio.extension === 'mp3' || audio.extension === 'flac' || audio.extension === 'wav' || audio.extension === 'wma') {
+    return audio.extension;
+  }
+  return 'unknown';
+}
+
+function deliveredBits(kind: ContainerKind, bits: number | undefined): string {
+  if (kind === 'mp3' || kind === 'flac') {
+    if (kind === 'flac' && bits === 24) return '24';
+    if (kind === 'flac' && bits === 32) return '32';
+    return '16';
+  }
+  return positive(bits) ? String(Math.round(bits ?? 0)) : '';
+}
+
+function deliveredWav(audio: AudioInfo, title: string): { codec: string; bits: string; uri: string } | null {
+  const kind = deliveryKind(audio);
+  if (kind !== 'mp3' && kind !== 'flac' && kind !== 'wav') return null;
+  return { codec: 'PCM', bits: deliveredBits(kind, audio.bitsPerSample), uri: releaseWavFilename(audio.fileName, title) };
+}
+
+function deliveryFile(audio: AudioInfo | null, title: string): string[] {
+  const delivered = audio ? deliveredWav(audio, title) : null;
   return [
     '          <DeliveryFile>',
     '            <Type>AudioFile</Type>',
-    el('AudioCodecType', codecFor(audio?.sniffed), 6),
+    el('AudioCodecType', delivered?.codec ?? codecFor(audio ? deliveryKind(audio) : undefined), 6),
     el('NumberOfChannels', positive(audio?.numberOfChannels) ? String(Math.round(audio!.numberOfChannels!)) : '', 6),
     el('SamplingRate', positive(audio?.sampleRate) ? String(Math.round(audio!.sampleRate!)) : '', 6),
-    el('BitsPerSample', positive(audio?.bitsPerSample) ? String(Math.round(audio!.bitsPerSample!)) : '', 6),
-    ...fileBlock(audio?.fileName?.trim() || '', 6),
+    el('BitsPerSample', delivered?.bits ?? (positive(audio?.bitsPerSample) ? String(Math.round(audio!.bitsPerSample!)) : ''), 6),
+    ...fileBlock(delivered?.uri ?? audio?.fileName?.trim() ?? '', 6),
     '          </DeliveryFile>',
   ];
 }
@@ -128,7 +154,7 @@ function soundRecording(title: string, artist: string, isrc: string, audio: Audi
     '        </ResourceId>',
     '        <TechnicalDetails>',
     '          <TechnicalResourceDetailsReference>T1</TechnicalResourceDetailsReference>',
-    ...deliveryFile(audio),
+    ...deliveryFile(audio, title),
     '        </TechnicalDetails>',
     '      </SoundRecordingEdition>',
     ...displayTitle(title, 3),
