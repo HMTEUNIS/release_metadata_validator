@@ -332,8 +332,11 @@ export default function HomePage() {
         <header className="masthead">
         <FitArt text={SPIRAL} className="spiral" />
         <h1>
-          <span className="visually-hidden">Metadata Validation Program</span>
+          <span className="visually-hidden">Metadata Validation Program [beta]</span>
           <FitArt text={ASCII_TITLE} className="ascii" />
+          <span className="beta" aria-hidden="true">
+            [beta]
+          </span>
         </h1>
         <p className="lede">Check your release before you upload.</p>
         <p className="note">
