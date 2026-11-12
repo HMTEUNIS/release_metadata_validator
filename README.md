@@ -282,7 +282,7 @@ Quality starts at 0.92 and drops by 0.08 until the file is under the platform ca
 
 ## ERN 4.3
 
-`buildSkeletonXml` writes `release-metadata-skeleton.xml`. It does not call the DDEX Workbench. It does not invent a UPC, a label, a genre, a deal, or a hash.
+`buildSkeletonXml` downloads as `{track name}_DDEX_skeleton.xml`. The track name is the form title, or the audio file name when the title is blank. It does not call the DDEX Workbench. It does not invent a UPC, a label, a genre, a deal, or a hash.
 
 ```mermaid
 flowchart TD

@@ -1,4 +1,9 @@
-export const SKELETON_FILENAME = 'release-metadata-skeleton.xml';
+import { fileStem, sanitizeStem } from './releaseTags';
+
+export function skeletonFilename(title?: string, audioName?: string): string {
+  const track = sanitizeStem(title) || (audioName ? sanitizeStem(fileStem(audioName)) : '') || 'release';
+  return `${track}_DDEX_skeleton.xml`;
+}
 
 export function prefersInlineXmlSave(userAgent: string): boolean {
   return /iPhone|iPad|iPod|Android/i.test(userAgent);
@@ -20,6 +25,6 @@ export function downloadBlob(blob: Blob, filename: string): void {
   URL.revokeObjectURL(url);
 }
 
-export function downloadXml(xml: string, filename = SKELETON_FILENAME): void {
+export function downloadXml(xml: string, filename = skeletonFilename()): void {
   downloadBlob(new Blob([xml], { type: 'application/xml' }), filename);
 }

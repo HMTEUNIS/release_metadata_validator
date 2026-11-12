@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { parseBuffer } from 'music-metadata';
 import { buildSkeletonXml } from '../src/lib/ddexSkeleton';
-import { prefersInlineXmlSave } from '../src/lib/downloadXml';
+import { prefersInlineXmlSave, skeletonFilename } from '../src/lib/downloadXml';
 import { coverExportEdge } from '../src/lib/rules/platformSpecs';
 import { audioRules } from '../src/lib/rules/audioRules';
 import { coverFileSizeRules } from '../src/lib/rules/distributorRules';
@@ -510,6 +510,9 @@ function testDdex() {
   );
   assertWellFormedXml(tricky);
 
+  assert.equal(skeletonFilename('Night Drive'), 'Night Drive_DDEX_skeleton.xml');
+  assert.equal(skeletonFilename('', 'track_demo2.wav'), 'track_demo2_DDEX_skeleton.xml');
+  assert.equal(skeletonFilename(), 'release_DDEX_skeleton.xml');
   assert.equal(prefersInlineXmlSave('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)'), true);
   assert.equal(prefersInlineXmlSave('Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X)'), true);
   assert.equal(prefersInlineXmlSave('Mozilla/5.0 (Linux; Android 14)'), true);

@@ -16,7 +16,7 @@ import { imageNeedsRelease, planReleaseTags, tagsAlreadyMatch } from '../lib/rel
 import { actualKind } from '../lib/rules/audioRules';
 import { analyzeAudioFile } from '../lib/analyzeAudioFile';
 import { audioDetailsArePlaceholders, buildSkeletonXml } from '../lib/ddexSkeleton';
-import { downloadXml } from '../lib/downloadXml';
+import { downloadXml, skeletonFilename } from '../lib/downloadXml';
 import { describeAudio, describeImage } from '../lib/format';
 import { GUIDELINES_AS_OF } from '../lib/guidelines';
 import { runStaticChecks } from '../lib/runChecks';
@@ -287,7 +287,10 @@ export default function HomePage() {
 
   function onDownloadSkeleton() {
     try {
-      downloadXml(buildSkeletonXml({ metadata, audio: audio?.info ?? null, imageFileName: cover?.file.name ?? null }));
+      downloadXml(
+        buildSkeletonXml({ metadata, audio: audio?.info ?? null, imageFileName: cover?.file.name ?? null }),
+        skeletonFilename(metadata.title, audio?.file.name),
+      );
       setExportError(null);
     } catch (error) {
       setExportError(error instanceof Error ? error.message : 'Could not build the XML file.');
